@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Skylark Downgrade</title>
+
+<link rel="icon" href="https://endlesspete.github.io/Medotdev/BBA22EA1-962D-44D9-B632-3E823FF06445.png">
+<link rel="apple-touch-icon" href="https://endlesspete.github.io/Medotdev/BBA22EA1-962D-44D9-B632-3E823FF06445.png">
+
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f7;
+  --card: rgba(255,255,255,.84);
+  --text: #1c1c1e;
+  --muted: #6e6e73;
+  --border: rgba(0,0,0,.08);
+  --accent: #007aff;
+  --danger: #ff3b30;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #09090b;
+    --card: rgba(28,28,30,.8);
+    --text: #f2f2f7;
+    --muted: #a1a1aa;
+    --border: rgba(255,255,255,.1);
+    --accent: #6aa9ff;
+    --danger: #ff6961;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background:
+    radial-gradient(circle at top, rgba(0,122,255,.16), transparent 42%),
+    var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+}
+
+.container {
+  width: 100%;
+  max-width: 430px;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 850;
+  letter-spacing: -2px;
+  line-height: .95;
+  background: linear-gradient(180deg, #007aff, #003e8a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-subtitle {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: .98rem;
+  line-height: 1.45;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 34px;
+  padding: 28px 24px;
+  text-align: center;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 18px 45px rgba(0,0,0,.16);
+}
+
+.badge {
+  display: inline-flex;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(0,122,255,.13);
+  color: var(--accent);
+  font-size: .78rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 1.7rem;
+  font-weight: 850;
+  letter-spacing: -.8px;
+  line-height: 1.15;
+}
+
+.version {
+  margin-top: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+select {
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.button {
+  display: block;
+  margin-top: 18px;
+  width: 100%;
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: var(--accent);
+  color: white;
+  font-size: 1rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.button.disabled {
+  opacity: .45;
+  pointer-events: none;
+  background: #8e8e93;
+}
+
+.small {
+  margin-top: 16px;
+  font-size: .84rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.small a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.error {
+  margin-top: 16px;
+  color: var(--danger);
+  font-size: .9rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.footer {
+  margin-top: 26px;
+  text-align: center;
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="hero">
+    <h1 class="hero-title">Skylark Downgrade</h1>
+    <div class="hero-subtitle">
+      Return to the Skylark edition built for your device.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="badge" id="badge">Checking Device</div>
+    <div class="title" id="title">Finding your supported edition...</div>
+    <div class="version" id="version">Please wait while Skylark checks compatibility.</div>
+
+    <div id="selectorWrap" style="display:none;">
+      <select id="editionSelect">
+        <option value="">What edition did you use?</option>
+      </select>
+    </div>
+
+    <a id="button" class="button disabled" href="#">Downgrade Edition</a>
+
+    <div class="small" id="small">Checking available editions...</div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <div class="footer">
+    <a href="https://x.com/Useskylark" target="_blank">@UseSkylark</a>
+    <br>
+    <a href="https://x.com/endlesspeteinc" target="_blank">@Endlesspeteinc</a>
+  </div>
+</div>
+
+<script>
+const editions = [
+  {
+    edition: "Edition 1",
+    min: 14.3,
+    max: 14.8,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/0e72496714944ee296007b436b4d3a8f"
+  },
+  {
+    edition: "Edition 2",
+    min: 15.0,
+    max: 15.8,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/65a674774ee5475cba87bb8ad822b08a"
+  },
+  {
+    edition: "Edition 3",
+    min: 16.0,
+    max: 16.7,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/9c5bd486f48d4448b47bf423616ce882"
+  },
+  {
+    edition: "Edition 4",
+    min: 17.0,
+    max: 17.7,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/8753eef694b54d13b29821ee68343e32"
+  },
+  {
+    edition: "Edition 5",
+    min: 18.0,
+    max: 18.7,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/1f61f828cbf14f739117c164a4b5584a"
+  },
+  {
+    edition: "Edition 6",
+    min: 26.0,
+    max: 26.5,
+    available: true,
+    link: "https://www.icloud.com/shortcuts/6aa7d90451154a98bf080ea9af262c30"
+  },
+  {
+    edition: "Edition 7",
+    min: 27.0,
+    max: 27.9,
+    available: false,
+    link: ""
+  }
+];
+
+const ua = navigator.userAgent;
+
+const isApple =
+  /iPhone|iPad|Macintosh/.test(ua) &&
+  !/Android|Windows|Linux/.test(ua);
+
+let ios = null;
+
+const osMatch = ua.match(/OS (\d+)[._](\d+)/);
+const versionMatch = ua.match(/Version\/(\d+)\.(\d+)/);
+
+if (osMatch) {
+  ios = parseFloat(`${osMatch[1]}.${osMatch[2]}`);
+}
+
+if (versionMatch) {
+  const safariMajor = parseInt(versionMatch[1]);
+  const safariMinor = parseInt(versionMatch[2]);
+
+  if (safariMajor >= 26 && ios && ios <= 18.7) {
+    ios = parseFloat(`${safariMajor}.${safariMinor}`);
+  }
+}
+
+const badge = document.getElementById("badge");
+const title = document.getElementById("title");
+const version = document.getElementById("version");
+const selectorWrap = document.getElementById("selectorWrap");
+const editionSelect = document.getElementById("editionSelect");
+const button = document.getElementById("button");
+const small = document.getElementById("small");
+const error = document.getElementById("error");
+
+function stopPage(status, heading, subtext, note) {
+  badge.textContent = status;
+  title.textContent = heading;
+  version.textContent = subtext;
+  button.textContent = "Unavailable";
+  button.classList.add("disabled");
+  button.removeAttribute("href");
+  small.innerHTML = `
+    Contact <a href="https://x.com/skylarksupport" target="_blank">@SkylarkSupport</a>
+    if you believe this is an issue.
+  `;
+  error.textContent = note;
+}
+
+if (!isApple) {
+  stopPage(
+    "Unsupported Device",
+    "Skylark is designed for Apple devices",
+    "Use an iPhone, iPad, or supported Apple device.",
+    "Android, Windows, and Linux devices are not supported."
+  );
+  throw new Error("Unsupported device");
+}
+
+if (!ios) {
+  stopPage(
+    "Version Not Detected",
+    "Skylark could not read your iOS version",
+    "Open this page in Safari on your Apple device.",
+    "Unable to identify your iOS version."
+  );
+  throw new Error("Unknown iOS");
+}
+
+const supportedEdition = editions.find(item =>
+  item.available &&
+  ios >= item.min &&
+  ios <= item.max
+);
+
+if (!supportedEdition) {
+  stopPage(
+    "No Supported Edition",
+    "Skylark does not have a supported edition for this iOS version",
+    `Detected iOS ${ios}`,
+    "A matching Skylark edition is not available yet."
+  );
+  throw new Error("No supported edition");
+}
+
+const supportedIndex = editions.indexOf(supportedEdition);
+
+const higherAvailableEditions = editions.filter((item, index) =>
+  item.available &&
+  index > supportedIndex
+);
+
+const olderOrCurrentEditions = editions.filter((item, index) =>
+  item.available &&
+  index <= supportedIndex
+);
+
+badge.textContent = "Supported Edition Found";
+title.textContent = `${supportedEdition.edition} is built for your device`;
+version.textContent = `Detected iOS ${ios}. You can return to ${supportedEdition.edition} if a newer edition is not right for you.`;
+
+button.textContent = `Get ${supportedEdition.edition}`;
+button.href = supportedEdition.link;
+button.classList.remove("disabled");
+
+if (higherAvailableEditions.length > 0) {
+  selectorWrap.style.display = "block";
+
+  higherAvailableEditions.forEach(item => {
+    const option = document.createElement("option");
+    option.value = item.edition;
+    option.textContent = item.edition;
+    editionSelect.appendChild(option);
+  });
+
+  small.innerHTML = `
+    Choose the newer edition you used, then downgrade to the edition Skylark recommends for your device.
+  `;
+
+  editionSelect.addEventListener("change", () => {
+    if (editionSelect.value) {
+      badge.textContent = "Downgrade Ready";
+      title.textContent = `Downgrade from ${editionSelect.value} to ${supportedEdition.edition}`;
+      version.textContent = `${supportedEdition.edition} is the recommended edition for iOS ${ios}.`;
+      button.textContent = `Downgrade to ${supportedEdition.edition}`;
+    }
+  });
+} else {
+  selectorWrap.style.display = "none";
+
+  small.innerHTML = `
+    No newer editions are available right now.<br><br>
+    Use the latest available edition for your device, or choose an older edition for now.<br><br>
+    Available for your device:<br>
+    ${olderOrCurrentEditions.map(item =>
+      `<a href="${item.link}" target="_blank">${item.edition}</a>`
+    ).join("<br>")}
+    <br><br>
+    Edition 7 is currently under development.
+  `;
+}
+
+console.log("Detected iOS:", ios);
+console.log("Supported edition:", supportedEdition.edition);
+</script>
+
+</body>
+</html>
