@@ -186,7 +186,7 @@ select {
   <div class="hero">
     <h1 class="hero-title">Skylark Downgrade</h1>
     <div class="hero-subtitle">
-      Return to the Skylark edition built for your device.
+      Choose an earlier Skylark edition for your device.
     </div>
   </div>
 
@@ -197,7 +197,7 @@ select {
 
     <div id="selectorWrap" style="display:none;">
       <select id="editionSelect">
-        <option value="">What edition did you use?</option>
+        <option value="">Choose an older edition</option>
       </select>
     </div>
 
@@ -282,6 +282,7 @@ if (osMatch) {
   ios = parseFloat(`${osMatch[1]}.${osMatch[2]}`);
 }
 
+/* Helps newer Safari/iOS versions report correctly */
 if (versionMatch) {
   const safariMajor = parseInt(versionMatch[1]);
   const safariMinor = parseInt(versionMatch[2]);
@@ -352,59 +353,82 @@ if (!supportedEdition) {
 
 const supportedIndex = editions.indexOf(supportedEdition);
 
-const higherAvailableEditions = editions.filter((item, index) =>
+const downgradeEditions = editions.filter((item, index) =>
   item.available &&
-  index > supportedIndex
-);
-
-const olderOrCurrentEditions = editions.filter((item, index) =>
-  item.available &&
-  index <= supportedIndex
+  index < supportedIndex
 );
 
 badge.textContent = "Supported Edition Found";
 title.textContent = `${supportedEdition.edition} is built for your device`;
-version.textContent = `Detected iOS ${ios}. You can return to ${supportedEdition.edition} if a newer edition is not right for you.`;
+version.textContent = `Detected iOS ${ios}. You can stay on ${supportedEdition.edition} or choose an older edition.`;
 
 button.textContent = `Get ${supportedEdition.edition}`;
 button.href = supportedEdition.link;
 button.classList.remove("disabled");
 
-if (higherAvailableEditions.length > 0) {
+if (downgradeEditions.length > 0) {
   selectorWrap.style.display = "block";
 
-  higherAvailableEditions.forEach(item => {
-    const option = document.createElement("option");
-    option.value = item.edition;
-    option.textContent = item.edition;
-    editionSelect.appendChild(option);
-  });
+  editionSelect.innerHTML = `
+    <option value="">Choose an older edition</option>
+  `;
+
+  downgradeEditions
+    .slice()
+    .reverse()
+    .forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.link;
+      option.textContent = item.edition;
+      option.dataset.edition = item.edition;
+      editionSelect.appendChild(option);
+    });
 
   small.innerHTML = `
-    Choose the newer edition you used, then downgrade to the edition Skylark recommends for your device.
+    Your recommended edition is ${supportedEdition.edition}, but older editions are available if you prefer them.
   `;
 
   editionSelect.addEventListener("change", () => {
+    const selectedOption = editionSelect.options[editionSelect.selectedIndex];
+
     if (editionSelect.value) {
-      badge.textContent = "Downgrade Ready";
-      title.textContent = `Downgrade from ${editionSelect.value} to ${supportedEdition.edition}`;
-      version.textContent = `${supportedEdition.edition} is the recommended edition for iOS ${ios}.`;
-      button.textContent = `Downgrade to ${supportedEdition.edition}`;
+      badge.textContent = "Older Edition Selected";
+      title.textContent = `Downgrade to ${selectedOption.dataset.edition}`;
+      version.textContent = `${supportedEdition.edition} is recommended for iOS ${ios}, but ${selectedOption.dataset.edition} is available.`;
+
+      button.textContent = `Get ${selectedOption.dataset.edition}`;
+      button.href = editionSelect.value;
+      button.classList.remove("disabled");
+
+      error.textContent = "Using an older edition may remove features, improvements, or compatibility fixes from newer Skylark editions.";
+    } else {
+      badge.textContent = "Supported Edition Found";
+      title.textContent = `${supportedEdition.edition} is built for your device`;
+      version.textContent = `Detected iOS ${ios}. You can stay on ${supportedEdition.edition} or choose an older edition.`;
+
+      button.textContent = `Get ${supportedEdition.edition}`;
+      button.href = supportedEdition.link;
+      button.classList.remove("disabled");
+
+      error.textContent = "";
     }
   });
 } else {
   selectorWrap.style.display = "none";
 
+  badge.textContent = "No Downgrade Available";
+  title.textContent = `${supportedEdition.edition} is the earliest edition available`;
+  version.textContent = `Detected iOS ${ios}.`;
+
+  button.textContent = `Get ${supportedEdition.edition}`;
+  button.href = supportedEdition.link;
+  button.classList.remove("disabled");
+
   small.innerHTML = `
-    No newer editions are available right now.<br><br>
-    Use the latest available edition for your device, or choose an older edition for now.<br><br>
-    Available for your device:<br>
-    ${olderOrCurrentEditions.map(item =>
-      `<a href="${item.link}" target="_blank">${item.edition}</a>`
-    ).join("<br>")}
-    <br><br>
-    Edition 7 is currently under development.
+    You are already on the first Skylark edition.
   `;
+
+  error.textContent = "Sorry, no other editions to downgrade to.";
 }
 
 console.log("Detected iOS:", ios);
