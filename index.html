@@ -19,17 +19,19 @@
   --border: rgba(0,0,0,.08);
   --accent: #007aff;
   --danger: #ff3b30;
+  --warning: #ff9500;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #09090b;
-    --card: rgba(28,28,30,.8);
+    --card: rgba(28,28,30,.82);
     --text: #f2f2f7;
     --muted: #a1a1aa;
     --border: rgba(255,255,255,.1);
     --accent: #6aa9ff;
     --danger: #ff6961;
+    --warning: #ffd60a;
   }
 }
 
@@ -48,7 +50,7 @@ body {
     radial-gradient(circle at top, rgba(0,122,255,.16), transparent 42%),
     var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
 }
 
 .container {
@@ -87,7 +89,9 @@ body {
   text-align: center;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 18px 45px rgba(0,0,0,.16);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.35) inset,
+    0 18px 45px rgba(0,0,0,.16);
 }
 
 .badge {
@@ -114,15 +118,37 @@ body {
   line-height: 1.45;
 }
 
+.notice {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  font-size: .88rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.beta {
+  background: rgba(255,149,0,.12);
+  border: 1px solid rgba(255,149,0,.28);
+  color: var(--warning);
+}
+
+.danger {
+  background: rgba(255,59,48,.09);
+  border: 1px solid rgba(255,59,48,.24);
+  color: var(--danger);
+}
+
 select {
   width: 100%;
   margin-top: 22px;
   padding: 15px;
-  border-radius: 16px;
+  border-radius: 18px;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: rgba(127,127,127,.08);
   color: var(--text);
   font-size: 1rem;
+  outline: none;
 }
 
 .button {
@@ -142,6 +168,18 @@ select {
   opacity: .45;
   pointer-events: none;
   background: #8e8e93;
+}
+
+.secondary {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--accent);
+  text-decoration: none;
+  font-size: .84rem;
+  font-weight: 700;
 }
 
 .small {
@@ -177,6 +215,10 @@ select {
   color: var(--accent);
   text-decoration: none;
 }
+
+.hidden {
+  display: none;
+}
 </style>
 </head>
 
@@ -195,16 +237,26 @@ select {
     <div class="title" id="title">Finding your supported edition...</div>
     <div class="version" id="version">Please wait while Skylark checks compatibility.</div>
 
-    <div id="selectorWrap" style="display:none;">
+    <div id="selectorWrap" class="hidden">
       <select id="editionSelect">
         <option value="">Choose an edition</option>
       </select>
+    </div>
+
+    <div class="notice beta hidden" id="betaNotice">
+      This older edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.
+    </div>
+
+    <div class="notice danger hidden" id="downgradeNotice">
+      Downgrading may remove newer features, improvements, or compatibility fixes. Skylark recommends using the edition built for your device.
     </div>
 
     <a id="button" class="button disabled" href="#">Checking</a>
 
     <div class="small" id="small">Loading edition data...</div>
     <div class="error" id="error"></div>
+
+    <a class="secondary" href="https://skylark-inc.github.io">Back to Skylark</a>
   </div>
 
   <div class="footer">
@@ -219,9 +271,17 @@ const EDITIONS_URL = "/editions.json";
 
 const ua = navigator.userAgent;
 
-const isApple =
-  /iPhone|iPad|Macintosh/.test(ua) &&
-  !/Android|Windows|Linux/.test(ua);
+const isIOSDevice =
+  /iPhone|iPad|iPod/.test(ua) ||
+  (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+const isMacOS =
+  /Macintosh/.test(ua) &&
+  navigator.maxTouchPoints <= 1;
+
+const isBlockedPlatform =
+  /Android|Windows|Linux/.test(ua) &&
+  !/iPhone|iPad|iPod/.test(ua);
 
 let iosVersion = null;
 
@@ -258,10 +318,13 @@ const editionSelect = document.getElementById("editionSelect");
 const button = document.getElementById("button");
 const small = document.getElementById("small");
 const error = document.getElementById("error");
+const betaNotice = document.getElementById("betaNotice");
+const downgradeNotice = document.getElementById("downgradeNotice");
 
 function versionToParts(value) {
-  const text = String(value).replace("iOS", "").trim();
+  const text = String(value || "").replace("iOS", "").replace("iPadOS", "").trim();
   const parts = text.split(".");
+
   return {
     major: Number(parts[0] || 0),
     minor: Number(parts[1] || 0)
@@ -273,55 +336,58 @@ function compareVersions(a, b) {
   return a.minor - b.minor;
 }
 
+function getValue(item, keys) {
+  for (const key of keys) {
+    if (item && item[key] !== undefined && item[key] !== null) {
+      return item[key];
+    }
+  }
+
+  return "";
+}
+
 function editionNumber(item) {
-  const name = item.edition || item.name || "";
+  const name = getValue(item, ["edition", "name", "title"]);
   const match = String(name).match(/\d+/);
   return match ? Number(match[0]) : 0;
 }
 
 function getEditionName(item) {
-  return item.edition || item.name || `Edition ${editionNumber(item)}`;
+  return getValue(item, ["edition", "name", "title"]) || `Edition ${editionNumber(item)}`;
 }
 
 function getEditionLink(item) {
-  return item.link || item.url || item.download || item.downloadURL || "";
+  return getValue(item, ["link", "url", "download", "downloadURL", "downloadUrl", "shortcut"]);
 }
 
 function getMinVersion(item) {
-  return versionToParts(item.min || item.minimum || item.minIOS || item.minimumIOS);
+  return versionToParts(getValue(item, ["min", "minimum", "minIOS", "minIos", "minVersion", "minimumIOS"]));
 }
 
 function getMaxVersion(item) {
-  return versionToParts(item.max || item.maximum || item.maxIOS || item.maximumIOS);
+  return versionToParts(getValue(item, ["max", "maximum", "maxIOS", "maxIos", "maxVersion", "maximumIOS"]));
+}
+
+function isBeta(item) {
+  const beta = getValue(item, ["beta", "Beta", "isBeta"]);
+  return beta === true || String(beta).toLowerCase() === "true";
 }
 
 function isDownloadable(item) {
-  const status = String(item.status || item.support || "").toLowerCase();
+  const status = String(getValue(item, ["status", "support", "supportStatus"])).toLowerCase();
   const link = getEditionLink(item);
 
   if (!link) return false;
   if (item.available === false) return false;
   if (item.downloadable === false) return false;
+  if (status.includes("unsupported")) return false;
   if (status.includes("development")) return false;
   if (status.includes("unreleased")) return false;
   if (status.includes("not available")) return false;
+  if (status.includes("coming")) return false;
+  if (status.includes("disabled")) return false;
 
   return true;
-}
-
-function stopPage(status, heading, subtext, note) {
-  badge.textContent = status;
-  title.textContent = heading;
-  version.textContent = subtext;
-  button.textContent = "Unavailable";
-  button.classList.add("disabled");
-  button.removeAttribute("href");
-  selectorWrap.style.display = "none";
-  small.innerHTML = `
-    Contact <a href="https://x.com/skylarksupport" target="_blank">@SkylarkSupport</a>
-    if you believe this is an issue.
-  `;
-  error.textContent = note;
 }
 
 function setButton(text, link, disabled = false) {
@@ -336,13 +402,52 @@ function setButton(text, link, disabled = false) {
   }
 }
 
+function stopPage(status, heading, subtext, note) {
+  badge.textContent = status;
+  title.textContent = heading;
+  version.textContent = subtext;
+
+  selectorWrap.classList.add("hidden");
+  betaNotice.classList.add("hidden");
+  downgradeNotice.classList.add("hidden");
+
+  setButton("Unavailable", "", true);
+
+  small.innerHTML = `
+    Contact <a href="https://x.com/skylarksupport" target="_blank">@SkylarkSupport</a>
+    if you believe this is an issue.
+  `;
+
+  error.textContent = note;
+}
+
 async function start() {
-  if (!isApple) {
+  if (isBlockedPlatform) {
     stopPage(
       "Unsupported Device",
       "Skylark is designed for Apple devices",
-      "Use an iPhone, iPad, or supported Apple device.",
+      "Use an iPhone, iPad, or iPod touch running iOS or iPadOS 14.3 or later.",
       "Android, Windows, and Linux devices are not supported."
+    );
+    return;
+  }
+
+  if (isMacOS) {
+    stopPage(
+      "macOS Not Supported",
+      "Downgrade is not available on macOS",
+      "Skylark may run through Shortcuts on Mac, but Downgrade is only supported on iPhone, iPad, and iPod touch.",
+      "Please use an iOS or iPadOS device to choose an older Skylark edition."
+    );
+    return;
+  }
+
+  if (!isIOSDevice) {
+    stopPage(
+      "Unsupported Device",
+      "Skylark is designed for Apple devices",
+      "Use an iPhone, iPad, or iPod touch running iOS or iPadOS 14.3 or later.",
+      "This platform is not supported."
     );
     return;
   }
@@ -351,8 +456,18 @@ async function start() {
     stopPage(
       "Version Not Detected",
       "Skylark could not read your iOS version",
-      "Open this page in Safari on your Apple device.",
-      "Unable to identify your iOS version."
+      "Open this page in Safari on your iPhone, iPad, or iPod touch.",
+      "Unable to identify your iOS or iPadOS version."
+    );
+    return;
+  }
+
+  if (compareVersions(iosVersion, { major: 14, minor: 3 }) < 0) {
+    stopPage(
+      "Software Too Old",
+      "Your software version is too old",
+      `Detected iOS/iPadOS ${iosVersion.text}`,
+      "Sorry, your software version is too old."
     );
     return;
   }
@@ -407,7 +522,7 @@ async function start() {
     stopPage(
       "No Supported Edition",
       "Skylark does not have a supported edition for this iOS version",
-      `Detected iOS ${iosVersion.text}`,
+      `Detected iOS/iPadOS ${iosVersion.text}`,
       "A matching Skylark edition is not available yet."
     );
     return;
@@ -423,20 +538,29 @@ async function start() {
 
   badge.textContent = "Supported Edition Found";
   title.textContent = `${supportedName} is built for your device`;
-  version.textContent = `Detected iOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+  version.textContent = `Detected iOS/iPadOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+
   setButton(`Get ${supportedName}`, supportedLink);
 
+  if (isBeta(supportedEdition)) {
+    betaNotice.textContent = "Your recommended Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
+    betaNotice.classList.remove("hidden");
+  }
+
   if (downgradeEditions.length === 0) {
-    selectorWrap.style.display = "none";
+    selectorWrap.classList.add("hidden");
+    downgradeNotice.classList.add("hidden");
+
     badge.textContent = "No Downgrade Available";
     title.textContent = `${supportedName} is the earliest edition available`;
-    version.textContent = `Detected iOS ${iosVersion.text}.`;
+    version.textContent = `Detected iOS/iPadOS ${iosVersion.text}.`;
+
     small.textContent = "You are already on the first Skylark edition.";
-    error.textContent = "Sorry, no other editions to downgrade to.";
+    error.textContent = "Sorry, no other editions are available to downgrade to.";
     return;
   }
 
-  selectorWrap.style.display = "block";
+  selectorWrap.classList.remove("hidden");
 
   editionSelect.innerHTML = `
     <option value="">Stay on ${supportedName}</option>
@@ -450,6 +574,7 @@ async function start() {
       option.value = getEditionLink(item);
       option.textContent = getEditionName(item);
       option.dataset.edition = getEditionName(item);
+      option.dataset.beta = isBeta(item) ? "true" : "false";
       editionSelect.appendChild(option);
     });
 
@@ -463,21 +588,42 @@ async function start() {
     if (!editionSelect.value) {
       badge.textContent = "Supported Edition Found";
       title.textContent = `${supportedName} is built for your device`;
-      version.textContent = `Detected iOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+      version.textContent = `Detected iOS/iPadOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+
       setButton(`Get ${supportedName}`, supportedLink);
+
+      downgradeNotice.classList.add("hidden");
+
+      if (isBeta(supportedEdition)) {
+        betaNotice.textContent = "Your recommended Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
+        betaNotice.classList.remove("hidden");
+      } else {
+        betaNotice.classList.add("hidden");
+      }
+
       error.textContent = "";
       return;
     }
 
     badge.textContent = "Older Edition Selected";
     title.textContent = `Downgrade to ${selectedOption.dataset.edition}`;
-    version.textContent = `${supportedName} is recommended for iOS ${iosVersion.text}, but ${selectedOption.dataset.edition} is available.`;
+    version.textContent = `${supportedName} is recommended for iOS/iPadOS ${iosVersion.text}, but ${selectedOption.dataset.edition} is available.`;
+
     setButton(`Get ${selectedOption.dataset.edition}`, editionSelect.value);
 
-    error.textContent = "Warning: choosing a lower edition may remove features, improvements, or compatibility fixes from newer Skylark editions.";
+    downgradeNotice.classList.remove("hidden");
+
+    if (selectedOption.dataset.beta === "true") {
+      betaNotice.textContent = "The selected older edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
+      betaNotice.classList.remove("hidden");
+    } else {
+      betaNotice.classList.add("hidden");
+    }
+
+    error.textContent = "";
   });
 
-  console.log("Detected iOS:", iosVersion.text);
+  console.log("Detected iOS/iPadOS:", iosVersion.text);
   console.log("Supported edition:", supportedName);
 }
 
