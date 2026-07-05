@@ -139,6 +139,12 @@ body {
   color: var(--danger);
 }
 
+.info {
+  background: rgba(0,122,255,.1);
+  border: 1px solid rgba(0,122,255,.22);
+  color: var(--accent);
+}
+
 select {
   width: 100%;
   margin-top: 22px;
@@ -243,10 +249,9 @@ select {
       </select>
     </div>
 
-    <div class="notice beta hidden" id="betaNotice">
-      This older edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.
-    </div>
-
+    <div class="notice beta hidden" id="betaNotice"></div>
+    <div class="notice danger hidden" id="alertNotice"></div>
+    <div class="notice info hidden" id="compatNotice"></div>
     <div class="notice danger hidden" id="downgradeNotice">
       Downgrading may remove newer features, improvements, or compatibility fixes. Skylark recommends using the edition built for your device.
     </div>
@@ -285,14 +290,15 @@ const isBlockedPlatform =
 
 let iosVersion = null;
 
-const osMatch = ua.match(/OS (\d+)[._](\d+)/);
-const versionMatch = ua.match(/Version\/(\d+)\.(\d+)/);
+const osMatch = ua.match(/OS (\d+)[._](\d+)(?:[._](\d+))?/);
+const versionMatch = ua.match(/Version\/(\d+)\.(\d+)(?:\.(\d+))?/);
 
 if (osMatch) {
   iosVersion = {
     major: Number(osMatch[1]),
     minor: Number(osMatch[2]),
-    text: `${osMatch[1]}.${osMatch[2]}`
+    patch: Number(osMatch[3] || 0),
+    text: `${osMatch[1]}.${osMatch[2]}${osMatch[3] ? "." + osMatch[3] : ""}`
   };
 }
 
@@ -300,12 +306,14 @@ if (osMatch) {
 if (versionMatch && iosVersion) {
   const safariMajor = Number(versionMatch[1]);
   const safariMinor = Number(versionMatch[2]);
+  const safariPatch = Number(versionMatch[3] || 0);
 
   if (safariMajor >= 26 && iosVersion.major <= 18) {
     iosVersion = {
       major: safariMajor,
       minor: safariMinor,
-      text: `${safariMajor}.${safariMinor}`
+      patch: safariPatch,
+      text: `${safariMajor}.${safariMinor}${versionMatch[3] ? "." + safariPatch : ""}`
     };
   }
 }
@@ -319,21 +327,30 @@ const button = document.getElementById("button");
 const small = document.getElementById("small");
 const error = document.getElementById("error");
 const betaNotice = document.getElementById("betaNotice");
+const alertNotice = document.getElementById("alertNotice");
+const compatNotice = document.getElementById("compatNotice");
 const downgradeNotice = document.getElementById("downgradeNotice");
 
 function versionToParts(value) {
-  const text = String(value || "").replace("iOS", "").replace("iPadOS", "").trim();
+  const text = String(value || "")
+    .replace("iOS", "")
+    .replace("iPadOS", "")
+    .trim();
+
   const parts = text.split(".");
 
   return {
     major: Number(parts[0] || 0),
-    minor: Number(parts[1] || 0)
+    minor: Number(parts[1] || 0),
+    patch: Number(parts[2] || 0),
+    text: text
   };
 }
 
 function compareVersions(a, b) {
   if (a.major !== b.major) return a.major - b.major;
-  return a.minor - b.minor;
+  if (a.minor !== b.minor) return a.minor - b.minor;
+  return a.patch - b.patch;
 }
 
 function getValue(item, keys) {
@@ -346,6 +363,17 @@ function getValue(item, keys) {
   return "";
 }
 
+function getBoolean(item, keys, fallback = false) {
+  const value = getValue(item, keys);
+
+  if (value === true) return true;
+  if (value === false) return false;
+  if (String(value).toLowerCase() === "true") return true;
+  if (String(value).toLowerCase() === "false") return false;
+
+  return fallback;
+}
+
 function editionNumber(item) {
   const name = getValue(item, ["edition", "name", "title"]);
   const match = String(name).match(/\d+/);
@@ -354,6 +382,10 @@ function editionNumber(item) {
 
 function getEditionName(item) {
   return getValue(item, ["edition", "name", "title"]) || `Edition ${editionNumber(item)}`;
+}
+
+function getEditionVersion(item) {
+  return getValue(item, ["version", "build"]);
 }
 
 function getEditionLink(item) {
@@ -369,15 +401,20 @@ function getMaxVersion(item) {
 }
 
 function isBeta(item) {
-  const beta = getValue(item, ["beta", "Beta", "isBeta"]);
-  return beta === true || String(beta).toLowerCase() === "true";
+  return getBoolean(item, ["beta", "Beta", "isBeta"], false);
 }
 
-function isDownloadable(item) {
-  const status = String(getValue(item, ["status", "support", "supportStatus"])).toLowerCase();
-  const link = getEditionLink(item);
+function hasAlert(item) {
+  return getBoolean(item, ["alert", "Alert", "hasAlert"], false);
+}
 
-  if (!link) return false;
+function getAlertMessage(item) {
+  return getValue(item, ["alertMessage", "AlertMessage", "message", "notice"]);
+}
+
+function isEditionUsable(item) {
+  const status = String(getValue(item, ["status", "support", "supportStatus"])).toLowerCase();
+
   if (item.available === false) return false;
   if (item.downloadable === false) return false;
   if (status.includes("unsupported")) return false;
@@ -388,6 +425,30 @@ function isDownloadable(item) {
   if (status.includes("disabled")) return false;
 
   return true;
+}
+
+function isCompatibleWithDevice(item) {
+  const min = getMinVersion(item);
+  const max = getMaxVersion(item);
+
+  const insideRange =
+    compareVersions(iosVersion, min) >= 0 &&
+    compareVersions(iosVersion, max) <= 0;
+
+  const newerButSameMajor =
+    iosVersion.major === max.major &&
+    compareVersions(iosVersion, max) > 0;
+
+  return insideRange || newerButSameMajor;
+}
+
+function isUnconfirmedSameMajor(item) {
+  const max = getMaxVersion(item);
+
+  return (
+    iosVersion.major === max.major &&
+    compareVersions(iosVersion, max) > 0
+  );
 }
 
 function setButton(text, link, disabled = false) {
@@ -402,14 +463,55 @@ function setButton(text, link, disabled = false) {
   }
 }
 
+function resetNotices() {
+  betaNotice.classList.add("hidden");
+  alertNotice.classList.add("hidden");
+  compatNotice.classList.add("hidden");
+  downgradeNotice.classList.add("hidden");
+
+  betaNotice.textContent = "";
+  alertNotice.textContent = "";
+  compatNotice.textContent = "";
+}
+
+function showEditionNotices(item, selectedOlder = false) {
+  resetNotices();
+
+  if (isBeta(item)) {
+    betaNotice.textContent =
+      "This Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested. For the best experience, use the latest software beta available for your device.";
+    betaNotice.classList.remove("hidden");
+  }
+
+  if (hasAlert(item)) {
+    const message = getAlertMessage(item);
+
+    if (message) {
+      alertNotice.textContent = message;
+      alertNotice.classList.remove("hidden");
+    }
+  }
+
+  if (isUnconfirmedSameMajor(item)) {
+    const max = getMaxVersion(item);
+
+    compatNotice.textContent =
+      `Your device is running iOS/iPadOS ${iosVersion.text}. This edition is confirmed up to ${max.text}, but it is still part of the same major software release. You may continue, but compatibility has not been fully confirmed yet.`;
+    compatNotice.classList.remove("hidden");
+  }
+
+  if (selectedOlder) {
+    downgradeNotice.classList.remove("hidden");
+  }
+}
+
 function stopPage(status, heading, subtext, note) {
   badge.textContent = status;
   title.textContent = heading;
   version.textContent = subtext;
 
   selectorWrap.classList.add("hidden");
-  betaNotice.classList.add("hidden");
-  downgradeNotice.classList.add("hidden");
+  resetNotices();
 
   setButton("Unavailable", "", true);
 
@@ -419,6 +521,15 @@ function stopPage(status, heading, subtext, note) {
   `;
 
   error.textContent = note;
+}
+
+function noDownload(item) {
+  const name = getEditionName(item);
+
+  setButton("No Download Available", "", true);
+
+  error.textContent =
+    `${name} does not currently have a download available. Please try again later or contact Skylark Support.`;
 }
 
 async function start() {
@@ -436,7 +547,7 @@ async function start() {
     stopPage(
       "macOS Not Supported",
       "Downgrade is not available on macOS",
-      "Skylark may run through Shortcuts on Mac, but Downgrade is only supported on iPhone, iPad, and iPod touch.",
+      "Skylark may run through Shortcuts on Mac, but Skylark Downgrade is only supported on iPhone, iPad, and iPod touch.",
       "Please use an iOS or iPadOS device to choose an older Skylark edition."
     );
     return;
@@ -462,7 +573,7 @@ async function start() {
     return;
   }
 
-  if (compareVersions(iosVersion, { major: 14, minor: 3 }) < 0) {
+  if (compareVersions(iosVersion, { major: 14, minor: 3, patch: 0 }) < 0) {
     stopPage(
       "Software Too Old",
       "Your software version is too old",
@@ -504,19 +615,13 @@ async function start() {
     return;
   }
 
-  const availableEditions = editions
-    .filter(isDownloadable)
+  const usableEditions = editions
+    .filter(isEditionUsable)
     .sort((a, b) => editionNumber(a) - editionNumber(b));
 
-  const supportedEdition = availableEditions.find(item => {
-    const min = getMinVersion(item);
-    const max = getMaxVersion(item);
-
-    return (
-      compareVersions(iosVersion, min) >= 0 &&
-      compareVersions(iosVersion, max) <= 0
-    );
-  });
+  const supportedEdition = usableEditions.find(item =>
+    isCompatibleWithDevice(item)
+  );
 
   if (!supportedEdition) {
     stopPage(
@@ -530,33 +635,35 @@ async function start() {
 
   const supportedNumber = editionNumber(supportedEdition);
   const supportedName = getEditionName(supportedEdition);
+  const supportedVersion = getEditionVersion(supportedEdition);
   const supportedLink = getEditionLink(supportedEdition);
 
-  const downgradeEditions = availableEditions.filter(item =>
+  const downgradeEditions = usableEditions.filter(item =>
     editionNumber(item) < supportedNumber
   );
 
   badge.textContent = "Supported Edition Found";
   title.textContent = `${supportedName} is built for your device`;
-  version.textContent = `Detected iOS/iPadOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+  version.textContent =
+    `Detected iOS/iPadOS ${iosVersion.text}.${supportedVersion ? " Skylark version " + supportedVersion + "." : ""}`;
 
-  setButton(`Get ${supportedName}`, supportedLink);
+  showEditionNotices(supportedEdition, false);
 
-  if (isBeta(supportedEdition)) {
-    betaNotice.textContent = "Your recommended Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
-    betaNotice.classList.remove("hidden");
+  if (supportedLink) {
+    setButton(`Get ${supportedName}`, supportedLink);
+    error.textContent = "";
+  } else {
+    noDownload(supportedEdition);
   }
 
   if (downgradeEditions.length === 0) {
     selectorWrap.classList.add("hidden");
-    downgradeNotice.classList.add("hidden");
 
     badge.textContent = "No Downgrade Available";
     title.textContent = `${supportedName} is the earliest edition available`;
-    version.textContent = `Detected iOS/iPadOS ${iosVersion.text}.`;
 
     small.textContent = "You are already on the first Skylark edition.";
-    error.textContent = "Sorry, no other editions are available to downgrade to.";
+    error.textContent = supportedLink ? "Sorry, no other editions are available to downgrade to." : error.textContent;
     return;
   }
 
@@ -569,12 +676,10 @@ async function start() {
   downgradeEditions
     .slice()
     .reverse()
-    .forEach(item => {
+    .forEach((item, index) => {
       const option = document.createElement("option");
-      option.value = getEditionLink(item);
+      option.value = String(index);
       option.textContent = getEditionName(item);
-      option.dataset.edition = getEditionName(item);
-      option.dataset.beta = isBeta(item) ? "true" : "false";
       editionSelect.appendChild(option);
     });
 
@@ -583,44 +688,44 @@ async function start() {
   `;
 
   editionSelect.addEventListener("change", () => {
-    const selectedOption = editionSelect.options[editionSelect.selectedIndex];
-
     if (!editionSelect.value) {
       badge.textContent = "Supported Edition Found";
       title.textContent = `${supportedName} is built for your device`;
-      version.textContent = `Detected iOS/iPadOS ${iosVersion.text}. You can stay on ${supportedName} or choose an older edition.`;
+      version.textContent =
+        `Detected iOS/iPadOS ${iosVersion.text}.${supportedVersion ? " Skylark version " + supportedVersion + "." : ""}`;
 
-      setButton(`Get ${supportedName}`, supportedLink);
+      showEditionNotices(supportedEdition, false);
 
-      downgradeNotice.classList.add("hidden");
-
-      if (isBeta(supportedEdition)) {
-        betaNotice.textContent = "Your recommended Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
-        betaNotice.classList.remove("hidden");
+      if (supportedLink) {
+        setButton(`Get ${supportedName}`, supportedLink);
+        error.textContent = "";
       } else {
-        betaNotice.classList.add("hidden");
+        noDownload(supportedEdition);
       }
 
-      error.textContent = "";
       return;
     }
 
+    const selectedEdition =
+      downgradeEditions.slice().reverse()[Number(editionSelect.value)];
+
+    const selectedName = getEditionName(selectedEdition);
+    const selectedVersion = getEditionVersion(selectedEdition);
+    const selectedLink = getEditionLink(selectedEdition);
+
     badge.textContent = "Older Edition Selected";
-    title.textContent = `Downgrade to ${selectedOption.dataset.edition}`;
-    version.textContent = `${supportedName} is recommended for iOS/iPadOS ${iosVersion.text}, but ${selectedOption.dataset.edition} is available.`;
+    title.textContent = `Downgrade to ${selectedName}`;
+    version.textContent =
+      `${supportedName} is recommended for iOS/iPadOS ${iosVersion.text}.${selectedVersion ? " Selected version " + selectedVersion + "." : ""}`;
 
-    setButton(`Get ${selectedOption.dataset.edition}`, editionSelect.value);
+    showEditionNotices(selectedEdition, true);
 
-    downgradeNotice.classList.remove("hidden");
-
-    if (selectedOption.dataset.beta === "true") {
-      betaNotice.textContent = "The selected older edition is currently in beta. Some features may change, improve, or behave differently while it is being tested.";
-      betaNotice.classList.remove("hidden");
+    if (selectedLink) {
+      setButton(`Get ${selectedName}`, selectedLink);
+      error.textContent = "";
     } else {
-      betaNotice.classList.add("hidden");
+      noDownload(selectedEdition);
     }
-
-    error.textContent = "";
   });
 
   console.log("Detected iOS/iPadOS:", iosVersion.text);
