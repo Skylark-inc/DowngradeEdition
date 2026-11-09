@@ -68,11 +68,30 @@ function status(s){$('status').textContent=s;}
 function note(id,heading,body){const el=$(id);el.replaceChildren();const strong=document.createElement('strong');strong.textContent=heading;el.append(strong);if(body){const p=document.createElement('p');p.textContent=body;el.append(p);}show(id);}
 function clearNotices(){for(const id of ['downgradeInfo','downgradeWarn','downgradeDanger','eol','beta','alert','compat','legacy','message','actions','download','release','invite'])show(id,false);$('download').removeAttribute('href');$('release').removeAttribute('href');}
 function action(id,label,url){const u=safeURL(url);if(!u)return false;$(id).textContent=label;$(id).href=u;show(id);show('actions');return true;}
-function render(e){selected=e;clearNotices();const n=number(e),base=number(recommended.e),gap=base-n,eol=yes(e.eol);status(eol?'End of Life':gap>0?'Earlier edition selected':'Recommended edition');$('resultLabel').textContent=gap>0?'Selected earlier edition':'Your recommended edition';$('edition').textContent=name(e);$('version').textContent=str(e.version)?`Latest version ${str(e.version)}`:'Version information unavailable';const min=str(e.min),max=str(e.max);$('range').textContent=min?`Originally designed for iOS / iPadOS ${min}${max?' to '+max:' and later'}`:'';
+function render(e){
+ selected=e;
+ clearNotices();
+ // Public edition names are not consecutive release numbers: Edition 26 follows Edition 5.
+ // The wheel is ordered newest to oldest, so its index is the actual number of releases back.
+ const n=number(e),gap=choices.indexOf(e),eol=yes(e.eol);
+ const isEarlier=gap>0;
+ status(eol?'End of Life':isEarlier?'Earlier edition selected':'Recommended edition');
+ $('resultLabel').textContent=isEarlier?'Selected earlier edition':'Your recommended edition';
+ $('edition').textContent=name(e);
+ $('version').textContent=str(e.version)?`Latest version ${str(e.version)}`:'Version information unavailable';
+ const min=str(e.min),max=str(e.max);
+ $('range').textContent=min?`Originally designed for iOS / iPadOS ${min}${max?' to '+max:' and later'}`:'';
  if(eol){show('eol');show('invite',false);return;}
- if(gap===1||gap===2)note('downgradeInfo','Earlier edition',`You're moving back ${gap} edition${gap===1?'':'s'}. Some newer features may not be included.`);
- else if(gap>=3&&gap<=9)note('downgradeWarn','Older edition',`You're moving back ${gap} editions. Some features and services may work differently.`);
- else if(gap>=10){const oldest=Math.min(...choices.map(x=>number(x)));if(n===oldest)note('downgradeDanger','Oldest available edition',`This is the oldest edition listed for downgrade. It may have significant compatibility and service limitations.`);else note('downgradeWarn','Significant downgrade',`You're moving back ${gap} editions. Important improvements and compatibility fixes may be missing.`);}
+ const oldest=choices.length>1&&gap===choices.length-1;
+ if(oldest&&isEarlier){
+  note('downgradeDanger','Oldest available edition','This is the oldest edition listed for downgrade. It may have significant compatibility and service limitations.');
+ }else if(gap===1||gap===2){
+  note('downgradeInfo','Earlier edition',`You're moving back ${gap} edition${gap===1?'':'s'}. Some newer features may not be included.`);
+ }else if(gap>=3&&gap<=9){
+  note('downgradeWarn','Older edition',`You're moving back ${gap} editions. Some features and services may work differently.`);
+ }else if(gap>=10){
+  note('downgradeWarn','Significant downgrade',`You're moving back ${gap} editions. Important improvements and compatibility fixes may be missing.`);
+ }
  if(yes(e.beta))show('beta');
  if(yes(e.alert)&&str(e.alertMessage))note('alert','Important notice',str(e.alertMessage));
  if(e===recommended.e&&recommended.unconfirmed)show('compat');
@@ -81,10 +100,10 @@ function render(e){selected=e;clearNotices();const n=number(e),base=number(recom
  if(valid)action('download',`Get ${name(e)}`,valid);
  else if(platform==='ipad'&&n>=26)note('message','iPadOS download unavailable','This edition does not currently have an iPadOS download. The iPhone build will not be substituted.');
  else note('message','Download unavailable','There is no download available for this edition. Please try again later or contact Skylark Support.');
- // A release page is supplementary, not a replacement for an unavailable device-specific download.
  if(release)action('release','View release page',release);
  show('invite');
 }
+
 function selectIndex(index,scroll=true){if(!choices.length)return;index=Math.max(0,Math.min(index,choices.length-1));const e=choices[index];if(e!==selected)render(e);const items=[...$('wheel').querySelectorAll('.wheel-item')];items.forEach((el,i)=>{const active=i===index;el.classList.toggle('active',active);el.setAttribute('aria-selected',String(active));el.tabIndex=-1;});if(items[index])$('wheel').setAttribute('aria-activedescendant',items[index].id);if(scroll){programmatic=true;$('wheel').scrollTo({top:index*44,behavior:'auto'});clearTimeout(scrollRelease);scrollRelease=setTimeout(()=>{programmatic=false;},120);}}
 function onWheelScroll(){if(programmatic)return;cancelAnimationFrame(scrollRaf);scrollRaf=requestAnimationFrame(()=>{const i=Math.max(0,Math.min(choices.length-1,Math.round($('wheel').scrollTop/44)));selectIndex(i,false);});}
 function buildWheel(){const wheel=$('wheel');wheel.replaceChildren();const top=document.createElement('div');top.className='wheel-spacer';top.setAttribute('aria-hidden','true');wheel.append(top);choices.forEach((e,i)=>{const b=document.createElement('button');b.type='button';b.className='wheel-item';b.id=`wheel-option-${i}`;b.setAttribute('role','option');b.setAttribute('aria-selected','false');b.textContent=number(e)===number(recommended.e)?`Edition ${number(e)} · Recommended`:`Edition ${number(e)}`;b.addEventListener('click',()=>selectIndex(i));wheel.append(b);});const bottom=top.cloneNode();wheel.append(bottom);show('pickerSection',choices.length>1);$('pickerHelp').textContent=choices.length>1?'The wheel starts on your recommended edition. Scroll down for earlier editions.':'No earlier editions are listed for your device.';selectIndex(0);}
