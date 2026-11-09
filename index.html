@@ -1,739 +1,106 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Skylark Downgrade</title>
-
 <link rel="icon" href="https://endlesspete.github.io/Medotdev/BBA22EA1-962D-44D9-B632-3E823FF06445.png">
 <link rel="apple-touch-icon" href="https://endlesspete.github.io/Medotdev/BBA22EA1-962D-44D9-B632-3E823FF06445.png">
-
 <style>
-:root {
-  color-scheme: light dark;
-  --bg: #f5f5f7;
-  --card: rgba(255,255,255,.84);
-  --text: #1c1c1e;
-  --muted: #6e6e73;
-  --border: rgba(0,0,0,.08);
-  --accent: #007aff;
-  --danger: #ff3b30;
-  --warning: #ff9500;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #09090b;
-    --card: rgba(28,28,30,.82);
-    --text: #f2f2f7;
-    --muted: #a1a1aa;
-    --border: rgba(255,255,255,.1);
-    --accent: #6aa9ff;
-    --danger: #ff6961;
-    --warning: #ffd60a;
-  }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  padding: 22px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background:
-    radial-gradient(circle at top, rgba(0,122,255,.16), transparent 42%),
-    var(--bg);
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
-}
-
-.container {
-  width: 100%;
-  max-width: 430px;
-}
-
-.hero {
-  text-align: center;
-  margin-bottom: 22px;
-}
-
-.hero-title {
-  margin: 0;
-  font-size: 3rem;
-  font-weight: 850;
-  letter-spacing: -2px;
-  line-height: .95;
-  background: linear-gradient(180deg, #007aff, #003e8a);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.hero-subtitle {
-  margin-top: 12px;
-  color: var(--muted);
-  font-size: .98rem;
-  line-height: 1.45;
-}
-
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 34px;
-  padding: 28px 24px;
-  text-align: center;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.35) inset,
-    0 18px 45px rgba(0,0,0,.16);
-}
-
-.badge {
-  display: inline-flex;
-  padding: 7px 14px;
-  border-radius: 999px;
-  background: rgba(0,122,255,.13);
-  color: var(--accent);
-  font-size: .78rem;
-  font-weight: 800;
-  margin-bottom: 18px;
-}
-
-.title {
-  font-size: 1.7rem;
-  font-weight: 850;
-  letter-spacing: -.8px;
-  line-height: 1.15;
-}
-
-.version {
-  margin-top: 12px;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.notice {
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 18px;
-  font-size: .88rem;
-  font-weight: 650;
-  line-height: 1.45;
-}
-
-.beta {
-  background: rgba(255,149,0,.12);
-  border: 1px solid rgba(255,149,0,.28);
-  color: var(--warning);
-}
-
-.danger {
-  background: rgba(255,59,48,.09);
-  border: 1px solid rgba(255,59,48,.24);
-  color: var(--danger);
-}
-
-.info {
-  background: rgba(0,122,255,.1);
-  border: 1px solid rgba(0,122,255,.22);
-  color: var(--accent);
-}
-
-select {
-  width: 100%;
-  margin-top: 22px;
-  padding: 15px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: rgba(127,127,127,.08);
-  color: var(--text);
-  font-size: 1rem;
-  outline: none;
-}
-
-.button {
-  display: block;
-  margin-top: 18px;
-  width: 100%;
-  border-radius: 18px;
-  padding: 16px 18px;
-  background: var(--accent);
-  color: white;
-  font-size: 1rem;
-  font-weight: 750;
-  text-decoration: none;
-}
-
-.button.disabled {
-  opacity: .45;
-  pointer-events: none;
-  background: #8e8e93;
-}
-
-.secondary {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--accent);
-  text-decoration: none;
-  font-size: .84rem;
-  font-weight: 700;
-}
-
-.small {
-  margin-top: 16px;
-  font-size: .84rem;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.small a {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.error {
-  margin-top: 16px;
-  color: var(--danger);
-  font-size: .9rem;
-  font-weight: 650;
-  line-height: 1.45;
-}
-
-.footer {
-  margin-top: 26px;
-  text-align: center;
-  font-size: .82rem;
-  color: var(--muted);
-  line-height: 1.8;
-}
-
-.footer a {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.hidden {
-  display: none;
-}
+:root{color-scheme:light dark;--bg:#f5f5f7;--ink:#1d1d1f;--sub:#666872;--card:rgba(255,255,255,.83);--soft:rgba(118,118,128,.075);--line:rgba(30,30,40,.10);--blue:#0071e3;--blue2:#0065ce;--warn:#996000;--danger:#c32637;--shadow:0 24px 65px rgba(25,50,100,.09)}
+@media(prefers-color-scheme:dark){:root{--bg:#090b11;--ink:#f5f5f7;--sub:#a6a7b2;--card:rgba(26,29,39,.84);--soft:rgba(255,255,255,.055);--line:rgba(255,255,255,.11);--blue:#2997ff;--blue2:#177ad6;--warn:#ffd078;--danger:#ff858e;--shadow:0 24px 70px rgba(0,0,0,.3)}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100svh;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;overflow-x:hidden}body:before{content:"";position:fixed;z-index:-1;inset:-30%;pointer-events:none;background:radial-gradient(ellipse 34% 30% at 22% 34%,rgba(0,119,255,.25),transparent 75%),radial-gradient(ellipse 34% 36% at 77% 58%,rgba(85,167,255,.23),transparent 75%),radial-gradient(ellipse 29% 30% at 50% 10%,rgba(58,110,255,.12),transparent 75%);animation:glowMove 8s ease-in-out infinite alternate;will-change:transform}@keyframes glowMove{0%{transform:translate(-8%,4%) rotate(-5deg) scale(1)}50%{transform:translate(7%,-6%) rotate(6deg) scale(1.09)}100%{transform:translate(-3%,8%) rotate(-3deg) scale(1.04)}}
+a{color:var(--blue);-webkit-tap-highlight-color:transparent}a:focus-visible,button:focus-visible,select:focus-visible,.wheel:focus-visible{outline:3px solid var(--blue);outline-offset:3px}.wrap{width:min(100% - 36px,760px);margin:0 auto;padding:58px 0 34px}.top{text-align:center}.eyebrow{color:var(--blue);font-size:.86rem;font-weight:750;letter-spacing:.015em;margin-bottom:13px}h1{font-size:clamp(2.8rem,8vw,4.85rem);letter-spacing:-.065em;line-height:1.035;margin:0;font-weight:760}.lead{color:var(--sub);font-size:clamp(1rem,2.8vw,1.15rem);line-height:1.55;max-width:540px;margin:19px auto 0}.panel{max-width:520px;margin:33px auto 0;padding:25px;border-radius:29px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}.status{display:inline-flex;align-items:center;gap:8px;border-radius:100px;background:rgba(0,113,227,.085);color:var(--blue);padding:8px 12px;font-size:.8rem;font-weight:700}.status:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}.result{text-align:center;padding:26px 15px 24px;margin-top:16px;background:var(--soft);border:1px solid var(--line);border-radius:23px}.overline{font-size:.73rem;color:var(--sub);font-weight:750;letter-spacing:.075em;text-transform:uppercase}.edition{font-size:clamp(1.9rem,6vw,2.5rem);font-weight:760;letter-spacing:-.05em;margin:9px 0 0;line-height:1.12}.version,.range{color:var(--sub);font-size:.9rem;line-height:1.5;margin:7px 0 0}.actions{margin-top:19px;text-align:center}.primary{display:flex;align-items:center;justify-content:center;gap:9px;min-height:51px;padding:13px 20px;border-radius:100px;background:var(--blue);color:#fff;font-weight:700;text-decoration:none;transition:background .2s,transform .2s}.primary:hover{background:var(--blue2)}.primary:active{transform:scale(.985)}.note{margin-top:15px;padding:15px 16px;border-radius:17px;border:1px solid var(--line);background:var(--soft);font-size:.88rem;line-height:1.52}.note strong{font-weight:750}.note p{margin:5px 0 0}.note a{text-underline-offset:3px}.note.info{border-color:rgba(0,113,227,.23);background:rgba(0,113,227,.055)}.note.warn{border-color:rgba(230,150,0,.3);background:rgba(255,170,0,.065)}.note.danger{border-color:rgba(230,70,75,.3);background:rgba(255,70,70,.065)}.note.danger strong{color:var(--danger)}.note.warn strong{color:var(--warn)}.picker-section{margin-top:21px}.picker-title{text-align:center;font-size:.91rem;font-weight:700;margin:0 0 5px}.picker-caption{text-align:center;color:var(--sub);font-size:.81rem;margin:0 0 12px}.wheel-frame{position:relative;width:min(100%,310px);height:220px;margin:auto;overflow:hidden;border-radius:21px;background:var(--soft);border:1px solid var(--line)}.wheel-frame:before,.wheel-frame:after{content:"";position:absolute;left:0;right:0;height:75px;z-index:2;pointer-events:none}.wheel-frame:before{top:0;background:linear-gradient(to bottom,var(--card),transparent)}.wheel-frame:after{bottom:0;background:linear-gradient(to top,var(--card),transparent)}.wheel-highlight{position:absolute;top:50%;left:9px;right:9px;height:44px;transform:translateY(-50%);background:rgba(0,113,227,.10);border:1px solid rgba(0,113,227,.17);border-radius:12px;pointer-events:none}.wheel{position:relative;height:100%;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scroll-padding:88px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none;touch-action:pan-y}.wheel::-webkit-scrollbar{display:none}.wheel-spacer{height:88px;pointer-events:none}.wheel-item{display:flex;align-items:center;justify-content:center;width:100%;height:44px;border:0;background:transparent;color:var(--sub);font:inherit;font-size:1.03rem;font-weight:550;scroll-snap-align:center;scroll-snap-stop:always;cursor:pointer;transition:color .16s,font-size .16s,transform .16s}.wheel-item.active{color:var(--ink);font-weight:760;font-size:1.18rem}.wheel-item:not(.active){opacity:.66}.picker-help{text-align:center;color:var(--sub);font-size:.78rem;line-height:1.5;margin:10px 0 0}.invite{display:flex;align-items:flex-start;gap:12px;margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:19px;background:var(--soft)}.invite-icon{flex:0 0 35px;width:35px;height:35px;display:grid;place-items:center;border-radius:11px;background:rgba(0,113,227,.10);color:var(--blue);font-size:19px}.invite strong{font-size:.9rem}.invite p{font-size:.85rem;color:var(--sub);line-height:1.45;margin:5px 0 7px}.invite a{font-size:.86rem;font-weight:700;text-underline-offset:3px}.footer{max-width:520px;margin:23px auto 0;display:flex;flex-wrap:wrap;justify-content:center;gap:12px 24px;text-align:center;font-size:.85rem}.footer a{text-decoration:none;font-weight:600}.footer a:hover{text-decoration:underline}.copyright{text-align:center;color:var(--sub);font-size:.74rem;margin-top:23px}.hidden{display:none!important}.manual{margin-top:15px}.manual label{display:block;font-size:.85rem;font-weight:650;margin-bottom:8px}.manual-row{display:flex;gap:8px}.manual select{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px;background:var(--card);color:var(--ink);font:inherit}.manual button{border:0;border-radius:12px;background:var(--blue);color:white;font:inherit;font-weight:700;padding:10px 14px;cursor:pointer}.minor{color:var(--sub);font-size:.8rem;line-height:1.5;margin-top:10px}@media(max-width:550px){.wrap{padding-top:38px}.panel{padding:19px;border-radius:24px}.result{padding:24px 12px}.invite{padding:14px}}@media(prefers-reduced-motion:reduce){body:before{animation:none;transform:none}*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
-
 <body>
-
-<div class="container">
-  <div class="hero">
-    <h1 class="hero-title">Skylark Downgrade</h1>
-    <div class="hero-subtitle">
-      Choose an earlier Skylark edition for your device.
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="badge" id="badge">Checking Device</div>
-    <div class="title" id="title">Finding your supported edition...</div>
-    <div class="version" id="version">Please wait while Skylark checks compatibility.</div>
-
-    <div id="selectorWrap" class="hidden">
-      <select id="editionSelect">
-        <option value="">Choose an edition</option>
-      </select>
-    </div>
-
-    <div class="notice beta hidden" id="betaNotice"></div>
-    <div class="notice danger hidden" id="alertNotice"></div>
-    <div class="notice info hidden" id="compatNotice"></div>
-    <div class="notice danger hidden" id="downgradeNotice">
-      Downgrading may remove newer features, improvements, or compatibility fixes. Skylark recommends using the edition built for your device.
-    </div>
-
-    <a id="button" class="button disabled" href="#">Checking</a>
-
-    <div class="small" id="small">Loading edition data...</div>
-    <div class="error" id="error"></div>
-
-    <a class="secondary" href="https://skylark-inc.github.io">Back to Skylark</a>
-  </div>
-
-  <div class="footer">
-    <a href="https://x.com/Useskylark" target="_blank">@UseSkylark</a>
-    <br>
-    <a href="https://x.com/endlesspeteinc" target="_blank">@Endlesspeteinc</a>
-  </div>
+<div class="wrap">
+<header class="top"><div class="eyebrow">Skylark · Downgrade</div><h1>Skylark<br>Downgrade.</h1><p class="lead">Explore earlier Skylark editions for your device. Choose the version that works for you.</p></header>
+<main class="panel" aria-label="Skylark Downgrade">
+<div class="status" id="status" role="status">Checking compatibility</div>
+<div class="result" aria-live="polite"><div class="overline" id="resultLabel">Your recommended edition</div><div class="edition" id="edition">Checking…</div><p class="version" id="version"></p><p class="range" id="range"></p></div>
+<section class="picker-section hidden" id="pickerSection" aria-label="Choose an edition"><h2 class="picker-title">Choose your edition</h2><p class="picker-caption">Swipe or scroll to explore older releases.</p><div class="wheel-frame"><div class="wheel-highlight" aria-hidden="true"></div><div class="wheel" id="wheel" tabindex="0" role="listbox" aria-label="Skylark edition" aria-activedescendant=""></div></div><p class="picker-help" id="pickerHelp"></p></section>
+<div class="note info hidden" id="downgradeInfo"></div>
+<div class="note warn hidden" id="downgradeWarn"></div>
+<div class="note danger hidden" id="downgradeDanger"></div>
+<div class="note danger hidden" id="eol"><strong>End of Life</strong><p>This edition is no longer supported. Some features or services may no longer function. Downloads are not offered.</p><p><a href="https://skylark-inc.github.io/NonServer/">Explore non-server Skylark</a> · <a href="https://skylark-inc.github.io/Support/Obsolete/">Learn about Skylark Obsolete</a></p></div>
+<div class="note warn hidden" id="beta"><strong>Beta edition</strong><p>This edition is under development and may contain bugs or unfinished features.</p></div>
+<div class="note danger hidden" id="alert"></div>
+<div class="note warn hidden" id="compat"><strong>Compatibility not yet confirmed</strong><p>Your OS version is newer than this edition's confirmed maximum within the same major OS release.</p></div>
+<div class="note warn hidden" id="legacy"><strong>Server compatibility notice</strong><p>Some server features may not work on iOS/iPadOS 15 because of changes to Dropbox support. <a href="https://skylark-inc.github.io/Support/Obsolete/">Learn more</a>.</p></div>
+<div class="note info hidden" id="mac"><strong>Using a Mac?</strong><p>Skylark may run through Shortcuts on macOS, but functionality may differ. Select an iOS/iPadOS version below to browse editions. Compatibility on Mac is not guaranteed.</p></div>
+<div class="note info hidden" id="message"></div>
+<div class="actions hidden" id="actions"><a class="primary hidden" id="download" rel="noopener noreferrer">Get Skylark</a><a class="primary hidden" id="release" rel="noopener noreferrer">View release page</a></div>
+<div class="manual hidden" id="manual"><label for="osChoice">Choose your iOS or iPadOS version</label><div class="manual-row"><select id="osChoice"><option value="">Select a version</option></select><button type="button" id="manualGo">Continue</button></div><p class="minor">Use this if Safari cannot identify your software, or to explore editions on a Mac. This does not change your device's OS.</p></div>
+<div class="invite hidden" id="invite"><div class="invite-icon" aria-hidden="true">✉</div><div><strong>Skylark Servers access required</strong><p>Server-based editions require approved access, iCloud, and the appropriate Shortcuts security or sharing permissions for your OS version.</p><a href="https://skylark-inc.github.io/Join/">Request access</a></div></div>
+</main>
+<nav class="footer" aria-label="Skylark links"><a href="https://skylark-inc.github.io/NonServer/">Non-server Skylark</a><a href="https://skylark-inc.github.io/Support/">Support</a><a href="https://skylark-inc.github.io/">Back to Skylark</a></nav>
+<div class="copyright">Skylark Inc. · <a href="https://x.com/Useskylark">@UseSkylark</a> · <a href="https://x.com/endlesspeteinc">@Endlesspeteinc</a></div>
 </div>
-
 <script>
-const EDITIONS_URL = "/editions.json";
-
-const ua = navigator.userAgent;
-
-const isIOSDevice =
-  /iPhone|iPad|iPod/.test(ua) ||
-  (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-
-const isMacOS =
-  /Macintosh/.test(ua) &&
-  navigator.maxTouchPoints <= 1;
-
-const isBlockedPlatform =
-  /Android|Windows|Linux/.test(ua) &&
-  !/iPhone|iPad|iPod/.test(ua);
-
-let iosVersion = null;
-
-const osMatch = ua.match(/OS (\d+)[._](\d+)(?:[._](\d+))?/);
-const versionMatch = ua.match(/Version\/(\d+)\.(\d+)(?:\.(\d+))?/);
-
-if (osMatch) {
-  iosVersion = {
-    major: Number(osMatch[1]),
-    minor: Number(osMatch[2]),
-    patch: Number(osMatch[3] || 0),
-    text: `${osMatch[1]}.${osMatch[2]}${osMatch[3] ? "." + osMatch[3] : ""}`
-  };
+'use strict';
+const EDITIONS='https://skylark-inc.github.io/editions.json';
+const ERROR='https://skylark-inc.github.io/Error';
+const FIND='https://skylark-inc.github.io/FindEdition';
+const $=id=>document.getElementById(id);
+const show=(id,on=true)=>$(id).classList.toggle('hidden',!on);
+const str=v=>typeof v==='string'?v.trim():'';
+const yes=v=>v===true||String(v).toLowerCase()==='true';
+const ua=navigator.userAgent||'';
+const ipad=/\biPad\b/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+const iphone=/\biPhone\b|\biPod\b/i.test(ua);
+const mac=/Macintosh/i.test(ua)&&!ipad;
+const platform=ipad?'ipad':iphone?'iphone':mac?'mac':'other';
+const apple=platform!=='other';
+let editions=[],recommended=null,choices=[],selected=null,detected=null,completed=false,scrollRaf=0,programmatic=false,scrollRelease=0;
+function parseVersion(v){if(v===null||v===undefined||String(v).trim()==='')return null;const s=String(v).trim().replace(/^(?:iOS|iPadOS)\s*/i,'');if(!/^\d+(?:\.\d+){0,2}$/.test(s))return null;const p=s.split('.').map(Number);return {major:p[0],minor:p[1]||0,patch:p[2]||0};}
+function compare(a,b){for(const k of ['major','minor','patch'])if(a[k]!==b[k])return a[k]>b[k]?1:-1;return 0;}
+function format(v){return v?`${v.major}.${v.minor}${v.patch?'.'+v.patch:''}`:'Unknown';}
+function identifyOS(){const safari=ua.match(/Version\/(\d+(?:\.\d+){1,2})(?=\s|$)/i);const os=ua.match(/(?:iPhone\s+)?OS\s+(\d+)[._](\d+)(?:[._](\d+))?/i);const sv=safari?parseVersion(safari[1]):null;const ov=os?parseVersion([os[1],os[2],os[3]].filter(x=>x!==undefined).join('.')):null;if(sv&&ov){if(sv.major>=26&&ov.major<=18)return sv;if(sv.major!==ov.major)return ov;return ov.patch&&!sv.patch?ov:sv;}return sv||ov;}
+function number(e){const raw=e.edition??e.name??'';const match=String(raw).match(/(?:Edition\s*)?(\d+)/i);return match?Number(match[1]):null;}
+function name(e){const n=number(e);return n!==null?`Skylark Edition ${n}`:str(e.edition)||'Skylark Edition';}
+function isUsable(e){const s=String(e.status??e.supportStatus??'').toLowerCase();return e.available!==false&&e.downloadable!==false&&!/disabled|unreleased|coming|not available|unsupported/.test(s);}
+function linkFor(e){const n=number(e);if(platform==='ipad'&&n!==null&&n>=26)return str(e.iPadOSLink);return str(e.link);}
+function safeURL(url){try{const u=new URL(url,location.href);return u.protocol==='https:'?u.href:'';}catch{return '';}}
+function pick(v){const valid=editions.map(e=>({e,min:parseVersion(e.min),max:parseVersion(e.max)})).filter(x=>x.min&&isUsable(x.e));const exact=valid.filter(x=>compare(v,x.min)>=0&&(!x.max||compare(v,x.max)<=0)).sort((a,b)=>compare(b.min,a.min)||((number(b.e)||0)-(number(a.e)||0)));if(exact.length)return {e:exact[0].e,unconfirmed:false};const near=valid.filter(x=>x.max&&x.max.major===v.major&&compare(v,x.max)>0&&compare(v,x.min)>=0).sort((a,b)=>compare(b.max,a.max));return near.length?{e:near[0].e,unconfirmed:true}:null;}
+function status(s){$('status').textContent=s;}
+function note(id,heading,body){const el=$(id);el.replaceChildren();const strong=document.createElement('strong');strong.textContent=heading;el.append(strong);if(body){const p=document.createElement('p');p.textContent=body;el.append(p);}show(id);}
+function clearNotices(){for(const id of ['downgradeInfo','downgradeWarn','downgradeDanger','eol','beta','alert','compat','legacy','message','actions','download','release','invite'])show(id,false);$('download').removeAttribute('href');$('release').removeAttribute('href');}
+function action(id,label,url){const u=safeURL(url);if(!u)return false;$(id).textContent=label;$(id).href=u;show(id);show('actions');return true;}
+function render(e){selected=e;clearNotices();const n=number(e),base=number(recommended.e),gap=base-n,eol=yes(e.eol);status(eol?'End of Life':gap>0?'Earlier edition selected':'Recommended edition');$('resultLabel').textContent=gap>0?'Selected earlier edition':'Your recommended edition';$('edition').textContent=name(e);$('version').textContent=str(e.version)?`Latest version ${str(e.version)}`:'Version information unavailable';const min=str(e.min),max=str(e.max);$('range').textContent=min?`Originally designed for iOS / iPadOS ${min}${max?' to '+max:' and later'}`:'';
+ if(eol){show('eol');show('invite',false);return;}
+ if(gap===1||gap===2)note('downgradeInfo','Earlier edition',`You're moving back ${gap} edition${gap===1?'':'s'}. Some newer features may not be included.`);
+ else if(gap>=3&&gap<=9)note('downgradeWarn','Older edition',`You're moving back ${gap} editions. Some features and services may work differently.`);
+ else if(gap>=10){const oldest=Math.min(...choices.map(x=>number(x)));if(n===oldest)note('downgradeDanger','Oldest available edition',`This is the oldest edition listed for downgrade. It may have significant compatibility and service limitations.`);else note('downgradeWarn','Significant downgrade',`You're moving back ${gap} editions. Important improvements and compatibility fixes may be missing.`);}
+ if(yes(e.beta))show('beta');
+ if(yes(e.alert)&&str(e.alertMessage))note('alert','Important notice',str(e.alertMessage));
+ if(e===recommended.e&&recommended.unconfirmed)show('compat');
+ if(detected&&detected.major===15)show('legacy');
+ const url=linkFor(e),valid=safeURL(url),release=safeURL(str(e.releasePage));
+ if(valid)action('download',`Get ${name(e)}`,valid);
+ else if(platform==='ipad'&&n>=26)note('message','iPadOS download unavailable','This edition does not currently have an iPadOS download. The iPhone build will not be substituted.');
+ else note('message','Download unavailable','There is no download available for this edition. Please try again later or contact Skylark Support.');
+ // A release page is supplementary, not a replacement for an unavailable device-specific download.
+ if(release)action('release','View release page',release);
+ show('invite');
 }
-
-/* iOS 26+ Safari fix */
-if (versionMatch && iosVersion) {
-  const safariMajor = Number(versionMatch[1]);
-  const safariMinor = Number(versionMatch[2]);
-  const safariPatch = Number(versionMatch[3] || 0);
-
-  if (safariMajor >= 26 && iosVersion.major <= 18) {
-    iosVersion = {
-      major: safariMajor,
-      minor: safariMinor,
-      patch: safariPatch,
-      text: `${safariMajor}.${safariMinor}${versionMatch[3] ? "." + safariPatch : ""}`
-    };
-  }
-}
-
-const badge = document.getElementById("badge");
-const title = document.getElementById("title");
-const version = document.getElementById("version");
-const selectorWrap = document.getElementById("selectorWrap");
-const editionSelect = document.getElementById("editionSelect");
-const button = document.getElementById("button");
-const small = document.getElementById("small");
-const error = document.getElementById("error");
-const betaNotice = document.getElementById("betaNotice");
-const alertNotice = document.getElementById("alertNotice");
-const compatNotice = document.getElementById("compatNotice");
-const downgradeNotice = document.getElementById("downgradeNotice");
-
-function versionToParts(value) {
-  const text = String(value || "")
-    .replace("iOS", "")
-    .replace("iPadOS", "")
-    .trim();
-
-  const parts = text.split(".");
-
-  return {
-    major: Number(parts[0] || 0),
-    minor: Number(parts[1] || 0),
-    patch: Number(parts[2] || 0),
-    text: text
-  };
-}
-
-function compareVersions(a, b) {
-  if (a.major !== b.major) return a.major - b.major;
-  if (a.minor !== b.minor) return a.minor - b.minor;
-  return a.patch - b.patch;
-}
-
-function getValue(item, keys) {
-  for (const key of keys) {
-    if (item && item[key] !== undefined && item[key] !== null) {
-      return item[key];
-    }
-  }
-
-  return "";
-}
-
-function getBoolean(item, keys, fallback = false) {
-  const value = getValue(item, keys);
-
-  if (value === true) return true;
-  if (value === false) return false;
-  if (String(value).toLowerCase() === "true") return true;
-  if (String(value).toLowerCase() === "false") return false;
-
-  return fallback;
-}
-
-function editionNumber(item) {
-  const name = getValue(item, ["edition", "name", "title"]);
-  const match = String(name).match(/\d+/);
-  return match ? Number(match[0]) : 0;
-}
-
-function getEditionName(item) {
-  return getValue(item, ["edition", "name", "title"]) || `Edition ${editionNumber(item)}`;
-}
-
-function getEditionVersion(item) {
-  return getValue(item, ["version", "build"]);
-}
-
-function getEditionLink(item) {
-  return getValue(item, ["link", "url", "download", "downloadURL", "downloadUrl", "shortcut"]);
-}
-
-function getMinVersion(item) {
-  return versionToParts(getValue(item, ["min", "minimum", "minIOS", "minIos", "minVersion", "minimumIOS"]));
-}
-
-function getMaxVersion(item) {
-  return versionToParts(getValue(item, ["max", "maximum", "maxIOS", "maxIos", "maxVersion", "maximumIOS"]));
-}
-
-function isBeta(item) {
-  return getBoolean(item, ["beta", "Beta", "isBeta"], false);
-}
-
-function hasAlert(item) {
-  return getBoolean(item, ["alert", "Alert", "hasAlert"], false);
-}
-
-function getAlertMessage(item) {
-  return getValue(item, ["alertMessage", "AlertMessage", "message", "notice"]);
-}
-
-function isEditionUsable(item) {
-  const status = String(getValue(item, ["status", "support", "supportStatus"])).toLowerCase();
-
-  if (item.available === false) return false;
-  if (item.downloadable === false) return false;
-  if (status.includes("unsupported")) return false;
-  if (status.includes("development")) return false;
-  if (status.includes("unreleased")) return false;
-  if (status.includes("not available")) return false;
-  if (status.includes("coming")) return false;
-  if (status.includes("disabled")) return false;
-
-  return true;
-}
-
-function isCompatibleWithDevice(item) {
-  const min = getMinVersion(item);
-  const max = getMaxVersion(item);
-
-  const insideRange =
-    compareVersions(iosVersion, min) >= 0 &&
-    compareVersions(iosVersion, max) <= 0;
-
-  const newerButSameMajor =
-    iosVersion.major === max.major &&
-    compareVersions(iosVersion, max) > 0;
-
-  return insideRange || newerButSameMajor;
-}
-
-function isUnconfirmedSameMajor(item) {
-  const max = getMaxVersion(item);
-
-  return (
-    iosVersion.major === max.major &&
-    compareVersions(iosVersion, max) > 0
-  );
-}
-
-function setButton(text, link, disabled = false) {
-  button.textContent = text;
-
-  if (disabled || !link) {
-    button.classList.add("disabled");
-    button.removeAttribute("href");
-  } else {
-    button.classList.remove("disabled");
-    button.href = link;
-  }
-}
-
-function resetNotices() {
-  betaNotice.classList.add("hidden");
-  alertNotice.classList.add("hidden");
-  compatNotice.classList.add("hidden");
-  downgradeNotice.classList.add("hidden");
-
-  betaNotice.textContent = "";
-  alertNotice.textContent = "";
-  compatNotice.textContent = "";
-}
-
-function showEditionNotices(item, selectedOlder = false) {
-  resetNotices();
-
-  if (isBeta(item)) {
-    betaNotice.textContent =
-      "This Skylark edition is currently in beta. Some features may change, improve, or behave differently while it is being tested. For the best experience, use the latest software beta available for your device.";
-    betaNotice.classList.remove("hidden");
-  }
-
-  if (hasAlert(item)) {
-    const message = getAlertMessage(item);
-
-    if (message) {
-      alertNotice.textContent = message;
-      alertNotice.classList.remove("hidden");
-    }
-  }
-
-  if (isUnconfirmedSameMajor(item)) {
-    const max = getMaxVersion(item);
-
-    compatNotice.textContent =
-      `Your device is running iOS/iPadOS ${iosVersion.text}. This edition is confirmed up to ${max.text}, but it is still part of the same major software release. You may continue, but compatibility has not been fully confirmed yet.`;
-    compatNotice.classList.remove("hidden");
-  }
-
-  if (selectedOlder) {
-    downgradeNotice.classList.remove("hidden");
-  }
-}
-
-function stopPage(status, heading, subtext, note) {
-  badge.textContent = status;
-  title.textContent = heading;
-  version.textContent = subtext;
-
-  selectorWrap.classList.add("hidden");
-  resetNotices();
-
-  setButton("Unavailable", "", true);
-
-  small.innerHTML = `
-    Contact <a href="https://x.com/skylarksupport" target="_blank">@SkylarkSupport</a>
-    if you believe this is an issue.
-  `;
-
-  error.textContent = note;
-}
-
-function noDownload(item) {
-  const name = getEditionName(item);
-
-  setButton("No Download Available", "", true);
-
-  error.textContent =
-    `${name} does not currently have a download available. Please try again later or contact Skylark Support.`;
-}
-
-async function start() {
-  if (isBlockedPlatform) {
-    stopPage(
-      "Unsupported Device",
-      "Skylark is designed for Apple devices",
-      "Use an iPhone, iPad, or iPod touch running iOS or iPadOS 14.3 or later.",
-      "Android, Windows, and Linux devices are not supported."
-    );
-    return;
-  }
-
-  if (isMacOS) {
-    stopPage(
-      "macOS Not Supported",
-      "Downgrade is not available on macOS",
-      "Skylark may run through Shortcuts on Mac, but Skylark Downgrade is only supported on iPhone, iPad, and iPod touch.",
-      "Please use an iOS or iPadOS device to choose an older Skylark edition."
-    );
-    return;
-  }
-
-  if (!isIOSDevice) {
-    stopPage(
-      "Unsupported Device",
-      "Skylark is designed for Apple devices",
-      "Use an iPhone, iPad, or iPod touch running iOS or iPadOS 14.3 or later.",
-      "This platform is not supported."
-    );
-    return;
-  }
-
-  if (!iosVersion) {
-    stopPage(
-      "Version Not Detected",
-      "Skylark could not read your iOS version",
-      "Open this page in Safari on your iPhone, iPad, or iPod touch.",
-      "Unable to identify your iOS or iPadOS version."
-    );
-    return;
-  }
-
-  if (compareVersions(iosVersion, { major: 14, minor: 3, patch: 0 }) < 0) {
-    stopPage(
-      "Software Too Old",
-      "Your software version is too old",
-      `Detected iOS/iPadOS ${iosVersion.text}`,
-      "Sorry, your software version is too old."
-    );
-    return;
-  }
-
-  let data;
-
-  try {
-    const response = await fetch(EDITIONS_URL, { cache: "no-store" });
-
-    if (!response.ok) {
-      throw new Error("Unable to load editions.json");
-    }
-
-    data = await response.json();
-  } catch (err) {
-    stopPage(
-      "Edition Data Unavailable",
-      "Skylark could not load edition data",
-      "Please try again later.",
-      "The editions.json file could not be loaded."
-    );
-    return;
-  }
-
-  const editions = Array.isArray(data) ? data : data.editions;
-
-  if (!Array.isArray(editions)) {
-    stopPage(
-      "Invalid Edition Data",
-      "Skylark could not read the edition list",
-      "The editions.json file may be formatted incorrectly.",
-      "Edition data is missing or invalid."
-    );
-    return;
-  }
-
-  const usableEditions = editions
-    .filter(isEditionUsable)
-    .sort((a, b) => editionNumber(a) - editionNumber(b));
-
-  const supportedEdition = usableEditions.find(item =>
-    isCompatibleWithDevice(item)
-  );
-
-  if (!supportedEdition) {
-    stopPage(
-      "No Supported Edition",
-      "Skylark does not have a supported edition for this iOS version",
-      `Detected iOS/iPadOS ${iosVersion.text}`,
-      "A matching Skylark edition is not available yet."
-    );
-    return;
-  }
-
-  const supportedNumber = editionNumber(supportedEdition);
-  const supportedName = getEditionName(supportedEdition);
-  const supportedVersion = getEditionVersion(supportedEdition);
-  const supportedLink = getEditionLink(supportedEdition);
-
-  const downgradeEditions = usableEditions.filter(item =>
-    editionNumber(item) < supportedNumber
-  );
-
-  badge.textContent = "Supported Edition Found";
-  title.textContent = `${supportedName} is built for your device`;
-  version.textContent =
-    `Detected iOS/iPadOS ${iosVersion.text}.${supportedVersion ? " Skylark version " + supportedVersion + "." : ""}`;
-
-  showEditionNotices(supportedEdition, false);
-
-  if (supportedLink) {
-    setButton(`Get ${supportedName}`, supportedLink);
-    error.textContent = "";
-  } else {
-    noDownload(supportedEdition);
-  }
-
-  if (downgradeEditions.length === 0) {
-    selectorWrap.classList.add("hidden");
-
-    badge.textContent = "No Downgrade Available";
-    title.textContent = `${supportedName} is the earliest edition available`;
-
-    small.textContent = "You are already on the first Skylark edition.";
-    error.textContent = supportedLink ? "Sorry, no other editions are available to downgrade to." : error.textContent;
-    return;
-  }
-
-  selectorWrap.classList.remove("hidden");
-
-  editionSelect.innerHTML = `
-    <option value="">Stay on ${supportedName}</option>
-  `;
-
-  downgradeEditions
-    .slice()
-    .reverse()
-    .forEach((item, index) => {
-      const option = document.createElement("option");
-      option.value = String(index);
-      option.textContent = getEditionName(item);
-      editionSelect.appendChild(option);
-    });
-
-  small.innerHTML = `
-    Older editions are available, but ${supportedName} is recommended for your device.
-  `;
-
-  editionSelect.addEventListener("change", () => {
-    if (!editionSelect.value) {
-      badge.textContent = "Supported Edition Found";
-      title.textContent = `${supportedName} is built for your device`;
-      version.textContent =
-        `Detected iOS/iPadOS ${iosVersion.text}.${supportedVersion ? " Skylark version " + supportedVersion + "." : ""}`;
-
-      showEditionNotices(supportedEdition, false);
-
-      if (supportedLink) {
-        setButton(`Get ${supportedName}`, supportedLink);
-        error.textContent = "";
-      } else {
-        noDownload(supportedEdition);
-      }
-
-      return;
-    }
-
-    const selectedEdition =
-      downgradeEditions.slice().reverse()[Number(editionSelect.value)];
-
-    const selectedName = getEditionName(selectedEdition);
-    const selectedVersion = getEditionVersion(selectedEdition);
-    const selectedLink = getEditionLink(selectedEdition);
-
-    badge.textContent = "Older Edition Selected";
-    title.textContent = `Downgrade to ${selectedName}`;
-    version.textContent =
-      `${supportedName} is recommended for iOS/iPadOS ${iosVersion.text}.${selectedVersion ? " Selected version " + selectedVersion + "." : ""}`;
-
-    showEditionNotices(selectedEdition, true);
-
-    if (selectedLink) {
-      setButton(`Get ${selectedName}`, selectedLink);
-      error.textContent = "";
-    } else {
-      noDownload(selectedEdition);
-    }
-  });
-
-  console.log("Detected iOS/iPadOS:", iosVersion.text);
-  console.log("Supported edition:", supportedName);
-}
-
+function selectIndex(index,scroll=true){if(!choices.length)return;index=Math.max(0,Math.min(index,choices.length-1));const e=choices[index];if(e!==selected)render(e);const items=[...$('wheel').querySelectorAll('.wheel-item')];items.forEach((el,i)=>{const active=i===index;el.classList.toggle('active',active);el.setAttribute('aria-selected',String(active));el.tabIndex=-1;});if(items[index])$('wheel').setAttribute('aria-activedescendant',items[index].id);if(scroll){programmatic=true;$('wheel').scrollTo({top:index*44,behavior:'auto'});clearTimeout(scrollRelease);scrollRelease=setTimeout(()=>{programmatic=false;},120);}}
+function onWheelScroll(){if(programmatic)return;cancelAnimationFrame(scrollRaf);scrollRaf=requestAnimationFrame(()=>{const i=Math.max(0,Math.min(choices.length-1,Math.round($('wheel').scrollTop/44)));selectIndex(i,false);});}
+function buildWheel(){const wheel=$('wheel');wheel.replaceChildren();const top=document.createElement('div');top.className='wheel-spacer';top.setAttribute('aria-hidden','true');wheel.append(top);choices.forEach((e,i)=>{const b=document.createElement('button');b.type='button';b.className='wheel-item';b.id=`wheel-option-${i}`;b.setAttribute('role','option');b.setAttribute('aria-selected','false');b.textContent=number(e)===number(recommended.e)?`Edition ${number(e)} · Recommended`:`Edition ${number(e)}`;b.addEventListener('click',()=>selectIndex(i));wheel.append(b);});const bottom=top.cloneNode();wheel.append(bottom);show('pickerSection',choices.length>1);$('pickerHelp').textContent=choices.length>1?'The wheel starts on your recommended edition. Scroll down for earlier editions.':'No earlier editions are listed for your device.';selectIndex(0);}
+function manualOptions(){const sel=$('osChoice');sel.replaceChildren(new Option('Select a version',''));const versions=[...new Set(editions.flatMap(e=>[e.min,e.max]).filter(v=>parseVersion(v)))].sort((a,b)=>compare(parseVersion(a),parseVersion(b)));for(const v of versions)sel.add(new Option(`iOS / iPadOS ${v}`,v));}
+function unresolved(){clearNotices();show('pickerSection',false);status(mac?'macOS detected':'Version could not be verified');$('resultLabel').textContent='Device information';$('edition').textContent=mac?'Mac compatibility':'Select your software version';$('version').textContent='';$('range').textContent='';show('manual');if(mac)show('mac');else note('message','Software version unavailable','Safari did not provide a reliable iOS or iPadOS version. Choose one below.');}
+function renderForOS(v){detected=v;show('manual',false);show('mac',mac);if(!v){unresolved();return;}if(compare(v,parseVersion('14.3'))<0){clearNotices();show('pickerSection',false);status('Software too old');$('resultLabel').textContent='Minimum requirement';$('edition').textContent='Software too old';$('version').textContent=`Detected version ${format(v)}`;$('range').textContent='Skylark editions require iOS or iPadOS 14.3 or later.';return;}
+ const match=pick(v);if(!match){clearNotices();show('pickerSection',false);status('No matching edition');$('resultLabel').textContent='Edition availability';$('edition').textContent='No edition found';$('version').textContent=`Selected OS ${format(v)}`;$('range').textContent='No edition is listed for this software version.';if(mac)show('manual');return;}
+ recommended=match;const base=number(match.e);choices=editions.filter(e=>number(e)!==null&&number(e)<=base&&isUsable(e)).sort((a,b)=>number(b)-number(a));if(!choices.includes(match.e)){choices.unshift(match.e);}choices=[match.e,...choices.filter(e=>e!==match.e)];buildWheel();}
+function redirectError(){if(!completed)location.replace(ERROR);}
+const watchdog=setTimeout(redirectError,30000);
+async function start(){try{if(!apple){completed=true;clearTimeout(watchdog);clearNotices();status('Unsupported platform');$('resultLabel').textContent='Compatibility';$('edition').textContent='Apple device required';$('version').textContent='';$('range').textContent='Skylark uses Apple Shortcuts.';return;}
+ const response=await fetch(EDITIONS,{cache:'no-store',headers:{Accept:'application/json'}});if(!response.ok)throw Error('Edition data unavailable');const data=await response.json();editions=Array.isArray(data)?data:Array.isArray(data?.editions)?data.editions:Array.isArray(data?.skylarkEditions)?data.skylarkEditions:[];if(!editions.length)throw Error('Invalid edition data');completed=true;clearTimeout(watchdog);manualOptions();if(mac){unresolved();return;}renderForOS(identifyOS());}catch(err){console.error('Skylark Downgrade:',err);location.replace(ERROR);}}
+$('wheel').addEventListener('scroll',onWheelScroll,{passive:true});
+$('wheel').addEventListener('keydown',ev=>{if(!choices.length)return;const i=choices.indexOf(selected);let next=i;if(ev.key==='ArrowDown')next=i+1;else if(ev.key==='ArrowUp')next=i-1;else if(ev.key==='Home')next=0;else if(ev.key==='End')next=choices.length-1;else return;ev.preventDefault();selectIndex(next);});
+$('manualGo').addEventListener('click',()=>{const v=parseVersion($('osChoice').value);if(v)renderForOS(v);});
 start();
 </script>
-
 </body>
 </html>
